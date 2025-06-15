@@ -24,8 +24,6 @@ export default {
     const photo_address_pt1 = "https://places.googleapis.com/v1/"
 
     const photo_address_pt2 = "/media?maxHeightPx=400&maxWidthPx=400&key=" + g_key
-
-    const blank = ""
     
     onMounted(async () => {
       await loader.load()
@@ -75,7 +73,7 @@ export default {
 <template>
   <div class="d-flex text-center" style="height: 20vh;">
     <div class="m-auto text-center">
-      <h2>Your Position</h2>
+      <h2>Restaurant Finder</h2>
       Estimated Location: {{ current_address }}
       <DataView :value="final_list" paginator :rows="5">
           <template #list="slotProps">
