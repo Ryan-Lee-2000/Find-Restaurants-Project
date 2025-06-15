@@ -17,17 +17,20 @@ export default {
 
     const places = ref()
     const current_address = ref()
+    const final_list = ref()
 
     const loader = new Loader({apiKey: g_key})
 
     const photo_address_pt1 = "https://places.googleapis.com/v1/"
 
-    const photo_address_pt2 = "/media?maxHeightPx=400&maxWidthPx=400&key="
+    const photo_address_pt2 = "/media?maxHeightPx=400&maxWidthPx=400&key=" + g_key
+
+    const blank = ""
     
     onMounted(async () => {
       await loader.load()
       const {SearchNearbyRankPreference} = await google.maps.importLibrary("places")
-      const request = {
+      const request = { //request builder for places api call
       // required parameters
       fields: ["displayName", "formattedAddress", "businessStatus", "rating", 'photos'],
       locationRestriction: {
@@ -41,17 +44,28 @@ export default {
       language: "en-US",
       region: "us",
       };
-      places.value  = await google.maps.places.Place.searchNearby(request)
-      for(let i = 0; i < cars.length; i++){
-        //I gotta rework the whole data structure...
+      places.value  = await google.maps.places.Place.searchNearby(request) //places api call
+
+      //extract data from api call into a usable array
+      const list_of_restaurants = [] 
+      for(let i = 0; i < Object.keys(places.value.places).length; i++){
+        const place_name = places.value.places[i].displayName
+        const place_address = places.value.places[i].formattedAddress
+        const place_status = places.value.places[i].businessStatus
+        const place_rating = places.value.places[i].rating
+        const place_photo = photo_address_pt1 + places.value.places[i].photos[0].name + photo_address_pt2
+
+        list_of_restaurants.push([place_name, place_address, place_status, place_rating, place_photo])
       }
 
+      final_list.value = list_of_restaurants //final list of restaurants
+
       const response = await fetch('https://maps.googleapis.com/maps/api/geocode/json?latlng='+ coords.value.latitude +','+ coords.value.longitude +'&result_type=street_address&key=' + g_key);
-      current_address.value = await response.json(); //extract JSON from the http response
-      current_address.value = current_address.value.results[0].formatted_address
+      const res_data = await response.json(); //extract JSON from the http response
+      current_address.value = res_data.results[0].formatted_address //Retrieve readable address
     })
 
-    return{ currPos, places, current_address }
+    return{current_address, final_list }
   }
 }
 
@@ -63,28 +77,25 @@ export default {
     <div class="m-auto text-center">
       <h2>Your Position</h2>
       Estimated Location: {{ current_address }}
-      <div v-for="place_arr in places">
-        <DataView :value="place_arr" paginator :rows="5">
+      <DataView :value="final_list" paginator :rows="5">
           <template #list="slotProps">
               <div v-for="(place, index) in slotProps.items">
-                <!-- {{ console.log(place) }} -->
                 <div style="display: flex; flex-direction: row;flex-wrap: wrap; margin-top: 10px; border: solid; border-width: 0.5px; border-color: white; padding: 5px;">
-                  <div style="display: flex;width: 100px;min-width: 100px; align-items: stretch; min-height: 100px; background-color: aliceblue; margin-right: 10px;">
-                    <Image src={{place.photos[0].name}} alt="Image" width="100" preview />
+                  <div style="display: flex;width: 100px;min-width: 100px; max-height: 100px; min-height: 100px; background-color: aliceblue; margin-right: 10px; object-fit: cover;">
+                    <Image v-bind:src="place[4]" alt="Image" width="100" preview  />
                   </div>
                   <div>
-                    <div style="display: flex;font-size: x-large; font-weight: 800;">{{place.displayName}}</div>
-                      <div>{{ place.formattedAddress }}</div>
-                        <Rating v-model="place.rating" :stars="5" readonly/>
+                    <div style="display: flex;font-size: x-large; font-weight: 800;">{{place[0]}}</div>
+                      <div>{{ place[1] }}</div>
+                        <Rating v-model="place[3]" :stars="5" readonly/>
                         <br/>
-                      <div>{{ place.businessStatus}}</div>
+                      <div>{{ place[2]}}</div>
                     </div>
                   </div>
                   
               </div>
           </template>
         </DataView>
-      </div>
       
       
     </div>
