@@ -9,6 +9,7 @@ import Button from "primevue/button"
 import DataView from 'primevue/dataview';
 
 import Rating from 'primevue/rating';
+import Image from 'primevue/image';
 
 const app = createApp(App)
 app.use(PrimeVue, {
@@ -20,4 +21,5 @@ app.use(PrimeVue, {
 app.component('Button', Button);
 app.component('DataView', DataView);
 app.component('Rating', Rating)
+app.component('Image', Image)
 app.mount('#app')
